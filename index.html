@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link
+         rel="shortcut icon"
+         href="Inscribed Solids in a Cube.png"
+         type="icon"
+      />
+      <title>Fine-Tuned Cube and Tetrahedron Nested</title>
+      <style>
+         body {
+            margin: 0;
+         }
+         canvas {
+            display: block;
+         }
+      </style>
+   </head>
+   <body>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.6/build/dat.gui.min.js"></script>
+      <script>
+         // Step 1: Setup the scene, camera, and renderer
+         const scene = new THREE.Scene();
+         const camera = new THREE.PerspectiveCamera(
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
+         );
+         const renderer = new THREE.WebGLRenderer();
+         renderer.setSize(window.innerWidth, window.innerHeight);
+         document.body.appendChild(renderer.domElement);
+
+         // Step 2: Add OrbitControls for interactivity
+         const controls = new THREE.OrbitControls(camera, renderer.domElement);
+         controls.enableDamping = true;
+         controls.dampingFactor = 0.05;
+
+         // Step 3: Define material settings (with transparency for the Cube)
+         const materialSettings = {
+            color1: 0xff5733, // Color for Tetrahedron
+            color2: 0x3357ff, // Color for Cube
+            wireframe: false,
+            opacity: 0.6, // Cube transparency
+         };
+
+         const cubeMaterial = new THREE.MeshBasicMaterial({
+            color: materialSettings.color2,
+            wireframe: materialSettings.wireframe,
+            transparent: true,
+            opacity: materialSettings.opacity,
+         });
+
+         const tetrahedronMaterial = new THREE.MeshBasicMaterial({
+            color: materialSettings.color1,
+            wireframe: materialSettings.wireframe,
+         });
+
+         // Step 4: Adjust sizes so that edges touch
+         // Cube has a size of 6 units, tetrahedron scaled to fit inside the cube.
+         const cube = new THREE.Mesh(
+            new THREE.BoxGeometry(6, 6, 6),
+            cubeMaterial
+         );
+
+         // Tetrahedron scaled to fit inside the cube (height of tetrahedron matches cube's face diagonal)
+         const tetrahedron = new THREE.Mesh(
+            new THREE.TetrahedronGeometry(4.24),
+            tetrahedronMaterial
+         );
+
+         // Step 5: Create a group for the nested shapes
+         const solidsGroup = new THREE.Group();
+         solidsGroup.add(cube);
+         solidsGroup.add(tetrahedron);
+
+         // Step 6: Add the group to the scene
+         scene.add(solidsGroup);
+
+         // Step 7: Position the camera
+         camera.position.z = 20;
+
+         // Step 8: Add lighting (enhanced lighting)
+         const ambientLight = new THREE.AmbientLight(0x404040); // soft ambient light
+         scene.add(ambientLight);
+
+         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); // directional light for better shading
+         directionalLight.position.set(5, 5, 5).normalize();
+         scene.add(directionalLight);
+
+         // Step 9: GUI to control wireframe, color, and transparency
+         const gui = new dat.GUI();
+         gui.add(materialSettings, "wireframe").onChange((value) => {
+            cube.material.wireframe = value;
+            tetrahedron.material.wireframe = value;
+         });
+
+         gui.addColor(materialSettings, "color1").onChange((value) => {
+            tetrahedron.material.color.set(value);
+         });
+
+         gui.addColor(materialSettings, "color2").onChange((value) => {
+            cube.material.color.set(value);
+         });
+
+         gui.add(materialSettings, "opacity", 0.1, 1.0).onChange((value) => {
+            cube.material.opacity = value;
+         });
+
+         // Step 10: Animation loop to update controls and render
+         function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate the group
+            solidsGroup.rotation.x += 0.01;
+            solidsGroup.rotation.y += 0.01;
+
+            // Update controls
+            controls.update();
+
+            // Render the scene
+            renderer.render(scene, camera);
+         }
+
+         animate();
+
+         // Handle window resize
+         window.addEventListener("resize", () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+         });
+      </script>
+   </body>
+</html>
